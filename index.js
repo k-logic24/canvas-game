@@ -113,8 +113,22 @@ function animate() {
     projectile.update()
   })
 
-  enemies.forEach(projectile => {
-    projectile.update()
+  enemies.forEach((enemy, idx) => {
+    enemy.update()
+
+    projectiles.forEach((projectile, projectitleIdx) => {
+      // 引数の合計の平方根
+      // 生成されたタイルと敵が近づくにつれ0になっていく
+      const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y)
+
+      // object touch
+      if (dist - enemy.radius - projectile.radius < 1) {
+        setTimeout(() => {
+          enemies.splice(idx, 1)
+          projectiles.splice(projectitleIdx, 1)
+        }, 0)
+      }
+    })
   })
 }
 
@@ -128,7 +142,6 @@ addEventListener('click', (event) => {
     y: Math.sin(angle)
   }
 
-  console.log(angle)
   projectiles.push(new Projectile(
     canvas.width / 2,
     canvas.height / 2,

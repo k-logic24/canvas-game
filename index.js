@@ -4,6 +4,11 @@ const c = canvas.getContext('2d')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
+const scoreEl = document.getElementById('scoreEl')
+const bigScoreEl = document.getElementById('bigScoreEl')
+const startGameEl = document.getElementById('startGameBtn')
+const modalEl = document.getElementById('modalEl')
+
 class Player {
   constructor(x, y, radius, color) {
     this.x = x
@@ -97,10 +102,21 @@ class Particle {
 const x = canvas.width / 2
 const y = canvas.height / 2
 
-const player = new Player(x, y, 10, 'white')
-const projectiles = []
-const enemies = []
-const particles = []
+let player = new Player(x, y, 10, 'white')
+let projectiles = []
+let enemies = []
+let particles = []
+let score = 0
+
+function init() {
+  player = new Player(x, y, 10, 'white')
+  projectiles = []
+  enemies = []
+  particles = []
+  score = 0
+  scoreEl.innerHTML = 0
+  bigScoreEl.innerHTML = 0
+}
 
 function spawnEnemies() {
   setInterval(() => {
@@ -168,30 +184,45 @@ function animate() {
     const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y)
     if (dist - enemy.radius - player.radius < 1) {
       cancelAnimationFrame(animationId)
+      modalEl.style.display = 'flex'
+      bigScoreEl.innerHTML = score
     }
 
     projectiles.forEach((projectile, projectileIdx) => {
       const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y)
 
-      // kwhen projectiles touch enemy
+      // when projectiles touch enemy
       if (dist - enemy.radius - projectile.radius < 1) {
         // create explosions
-        for (let i = 0; i < 8; i++) {
-          particles.push(new Particle(projectile.x, projectile.y, 3, enemy.color, {
-            x: Math.random() - 0.5,
-            y: Math.random() - 0.5
-          }))
+        for (let i = 0; i < enemy.radius * 2; i++) {
+          particles.push(new Particle(
+            projectile.x,
+            projectile.y,
+            Math.random() * 2,
+            enemy.color,
+            {
+              x: (Math.random() - 0.5) * (Math.random() * 8),
+              y: (Math.random() - 0.5) * (Math.random() * 8)
+            }
+          ))
         }
         // more smaller when touch enemy
         if (enemy.radius - 10 > 5) {
+          // increase score
+          score += 100
+          scoreEl.innerHTML = score
+
           gsap.to(enemy, {
             radius: enemy.radius - 10
           })
-          enemy.radius -= 10
           setTimeout(() => {
             projectiles.splice(projectileIdx, 1)
           }, 0)
         } else {
+          // remove the scene altogether
+          score += 250
+          scoreEl.innerHTML = score
+
           setTimeout(() => {
             enemies.splice(index, 1)
             projectiles.splice(projectileIdx, 1)
@@ -221,5 +252,10 @@ addEventListener('click', (event) => {
   ))
 })
 
-animate()
-spawnEnemies()
+startGameEl.addEventListener('click', () => {
+  init()
+  animate()
+  spawnEnemies()
+  modalEl.style.display = 'none'
+})
+
